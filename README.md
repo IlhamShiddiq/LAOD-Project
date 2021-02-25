@@ -6,6 +6,11 @@ This is the final project of Intel AI for Youth Program. LAOD (Library Automatic
 * To train the datasets and create all of bottlenecks files, run `command 1` which is in the file named `commands-needed.txt`
 * To test the model, run `command 2` which is in the file named `commands-needed.txt`<br/> note: fill `--image` argument with your image path
 
+### Built With
+* [Haarcascades](https://github.com/opencv/opencv/tree/master/data/haarcascades) - Face detection
+* [Tesseract](https://pypi.org/project/pytesseract/) - Text detection
+* [Tensorflow](https://www.tensorflow.org/)
+
 ### Contributors
 * **Dafa Nurul Fauziansyah** - [Github](https://github.com/dafanf)
 * **Ilham Shiddiq** - [Github](https://github.com/IlhamShiddiq)
