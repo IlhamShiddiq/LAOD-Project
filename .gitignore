@@ -1,0 +1,5 @@
+assets/bottlenecks/
+assets/training_summaries/
+assets/retrained_graph.pb
+assets/retrained_labels.txt
+scripts/__pycache__/
