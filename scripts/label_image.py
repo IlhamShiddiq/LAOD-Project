@@ -30,7 +30,7 @@ import os
 
 
 pytesseract.pytesseract.tesseract_cmd = 'C:\Program Files\Tesseract-OCR\\tesseract.exe'
-path = "assets/books/book.jpg"
+path = "assets/books/test.jpg"
 
 # load the example image and convert it to grayscale
 image = cv2.imread(path)
