@@ -22,32 +22,24 @@ import argparse
 import numpy as np
 import tensorflow as tf
 
-from PIL import Image
+try:
+    from PIL import Image
+except ImportError:
+    import Image
 import pytesseract
-import argparse
-import cv2
-import os
 
 
 pytesseract.pytesseract.tesseract_cmd = 'C:\Program Files\Tesseract-OCR\\tesseract.exe'
-path = "assets/books/test.jpg"
+path = "assets/books/calculus.jpg"
 
-# load the example image and convert it to grayscale
-image = cv2.imread(path)
-gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-# check to see if we should apply thresholding to preprocess the
+def ocr_core(filename):
+    """
+    This function will handle the core OCR processing of images.
+    """
+    text = pytesseract.image_to_string(Image.open(filename))  # We'll use Pillow's Image class to open the image and pytesseract to detect the string in the image
+    text = text.replace('\n', ' ')
+    return text
 
-# write the grayscale image to disk as a temporary file so we can
-# apply OCR to it
-filename = "{}.png".format(os.getpid())
-cv2.imwrite(filename, gray)
-
-# load the image as a PIL/Pillow image, apply OCR, and then delete
-# the temporary file
-text = pytesseract.image_to_string(Image.open(filename))
-
-text = text.replace('\n', ' ')
-os.remove(filename)
 def load_graph(model_file):
   graph = tf.Graph()
   graph_def = tf.GraphDef()
@@ -161,5 +153,5 @@ if __name__ == "__main__":
   labels = load_labels(label_file)
 
   for i in top_k:
-    print("The name of person is: ",labels[i],"and the book that is borrowed is: ", text)
+    print("The name of person is: ",labels[i],"\nAnd the book that is borrowed is: ", ocr_core(path))
     break
