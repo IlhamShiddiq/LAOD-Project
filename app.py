@@ -7,6 +7,10 @@ import os
 import argparse
 import numpy as np
 import tensorflow as tf
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import firestore
+from datetime import datetime
 
 try:
     from PIL import Image
@@ -14,11 +18,17 @@ except ImportError:
     import Image
 import pytesseract
 
+if not firebase_admin._apps:
+    cred = credentials.Certificate("laod-cdea1-firebase-adminsdk-vu2cq-db4367a315.json")
+    firebase_admin.initialize_app(cred)
+
+db = firestore.client()
+
 def ocr_core(filename):
     """
     This function will handle the core OCR processing of images.
     """
-    text = pytesseract.image_to_string(Image.open(filename))  # We'll use Pillow's Image class to open the image and pytesseract to detect the string in the image
+    text = pytesseract.image_to_string(Image.open(filename))
     text = text.replace('\n', ' ')
     return text
 
@@ -73,11 +83,11 @@ style = """
             text-align: center;
         }
         .title-app {
-            margin-top: -30px !important;
+            margin-top: -70px !important;
         }
         .sub-title-app {
-            margin-top: -10px !important;
-            margin-bottom: 20px !important;
+            margin-top: -40px !important;
+            margin-bottom: 15px !important;
         }
         button {
             width: 100% !important;
@@ -110,6 +120,7 @@ incorrect = st.sidebar.checkbox('The title of the book is printed incorrectly')
 if incorrect:
     new_title = st.sidebar.text_input('Input the title of the book here')
 predict = st.sidebar.button('Start Prediction')
+predict_save = st.sidebar.button('Store Data')
 
 # MAIN PAGE
 st.info('Hi there, all resources that have you been uploaded will be shown here.')
@@ -129,7 +140,8 @@ if predict:
     st.markdown('<div class="caption">Please wait, this process takes a minute...</div>', unsafe_allow_html=True)
     pytesseract.pytesseract.tesseract_cmd = 'C:\Program Files\Tesseract-OCR\\tesseract.exe'
     path = "assets/books/test.jpg"
-    title = ''
+    title = 'Title'
+    manually_input = False
 
     if __name__ == "__main__":
         file_name = "tensorflow/examples/label_image/data/grace_hopper.jpg"
@@ -173,11 +185,73 @@ if predict:
 
         if incorrect:
             title = new_title
+            manually_input = True
         else:
             title = ocr_core(path)
 
         for i in top_k:
             st.success("The student ID who will borrow the books : "+labels[i])
             st.success("The title of the book that is will be borrowed : "+title)
-            break
-        
+            break   
+if predict_save:
+    st.markdown('<div class="caption">Saving data...</div>', unsafe_allow_html=True)
+    pytesseract.pytesseract.tesseract_cmd = 'C:\Program Files\Tesseract-OCR\\tesseract.exe'
+    path = "assets/books/test.jpg"
+    title = 'Title'
+    manually_input = False
+
+    if __name__ == "__main__":
+        file_name = "tensorflow/examples/label_image/data/grace_hopper.jpg"
+        model_file = \
+            "tensorflow/examples/label_image/data/inception_v3_2016_08_28_frozen.pb"
+        label_file = "tensorflow/examples/label_image/data/imagenet_slim_labels.txt"
+        input_height = 299
+        input_width = 299
+        input_mean = 0
+        input_std = 255
+        input_layer = "input"
+        output_layer = "InceptionV3/Predictions/Reshape_1"
+
+        model_file = "assets/retrained_graph.pb"
+        file_name = "test/test.jpg"
+        input_layer = "Placeholder"
+        label_file = "assets/retrained_labels.txt"
+        output_layer = "final_result"
+
+        graph = load_graph(model_file)
+        t = read_tensor_from_image_file(
+            file_name,
+            input_height=input_height,
+            input_width=input_width,
+            input_mean=input_mean,
+            input_std=input_std)
+
+        input_name = "import/" + input_layer
+        output_name = "import/" + output_layer
+        input_operation = graph.get_operation_by_name(input_name)
+        output_operation = graph.get_operation_by_name(output_name)
+
+        with tf.compat.v1.Session(graph=graph) as sess:
+            results = sess.run(output_operation.outputs[0], {
+                input_operation.outputs[0]: t
+            })
+        results = np.squeeze(results)
+
+        top_k = results.argsort()[-5:][::-1]
+        labels = load_labels(label_file)
+
+        if incorrect:
+            title = new_title
+            manually_input = True
+        else:
+            title = ocr_core(path)
+
+        for i in top_k:
+            now = datetime.now()
+            dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+
+            doc = db.collection(labels[i]).document(title)
+            doc.set({"Name":labels[i], "Title of Book": title, "Time": dt_string, "Manually Input": manually_input})
+
+            st.success("Data added successfully!")
+            break   
