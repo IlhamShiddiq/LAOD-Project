@@ -30,7 +30,7 @@ import pytesseract
 
 
 pytesseract.pytesseract.tesseract_cmd = 'C:\Program Files\Tesseract-OCR\\tesseract.exe'
-path = "assets/books/calculus.jpg"
+path = "assets/books/book2.jpg"
 
 def ocr_core(filename):
     """
@@ -129,6 +129,12 @@ if __name__ == "__main__":
     input_layer = args.input_layer
   if args.output_layer:
     output_layer = args.output_layer
+
+  model_file = "assets/retrained_graph.pb"
+  file_name = "test/test.jpg"
+  input_layer = "Placeholder"
+  label_file = "assets/retrained_labels.txt"
+  output_layer = "final_result"
 
   graph = load_graph(model_file)
   t = read_tensor_from_image_file(
